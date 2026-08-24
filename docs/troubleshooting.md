@@ -119,3 +119,31 @@ resource "aws_eks_access_policy_association" "admin" {
   }
 }
 ```
+
+
+## Phase 6+ — Teardown
+
+### `terraform destroy` fails: "RepositoryNotEmptyException"
+**Cause:** the same ECR gotcha documented in project 3 — AWS refuses
+to delete a repository that still contains images unless
+`force_delete = true` is set, which this project deliberately doesn't
+set. Everything else destroyed cleanly; only this one resource
+blocked.
+**Fix:** clear the images manually, then re-run `terraform destroy`:
+```bash
+aws ecr list-images --repository-name eks-guestbook-app --profile cloud-resume --query "imageIds" --output json
+aws ecr batch-delete-image --repository-name eks-guestbook-app --profile cloud-resume --image-ids imageDigest=sha256:...
+```
+
+### Destroying the ALB before `terraform destroy` — a real ordering requirement
+**Cause:** unlike projects 2-3, the ALB in this project was created by
+the AWS Load Balancer Controller in response to a Kubernetes Ingress
+resource — not by Terraform. Terraform has no knowledge of it and no
+way to clean it up. Running `terraform destroy` while that ALB (and
+its associated security group and ENIs) still exists would likely
+hang or fail while trying to delete the VPC and subnets underneath it.
+**Fix:** delete the Kubernetes resources first (`kubectl delete -f
+k8s/ingress.yaml`, then `service.yaml`, then `deployment.yaml`), wait
+for the controller to actually finish tearing down the real ALB
+(verify with `aws elbv2 describe-load-balancers`), and only then run
+`terraform destroy`.
