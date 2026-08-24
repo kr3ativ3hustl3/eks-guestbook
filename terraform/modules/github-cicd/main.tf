@@ -62,6 +62,28 @@ resource "aws_iam_role" "github_actions" {
   }
 }
 
+
+# `aws eks update-kubeconfig` needs this plain IAM permission just to
+# fetch the cluster's connection details (endpoint, CA cert) — a
+# completely separate concern from the EKS access entry granted at
+# the Kubernetes/RBAC level in root main.tf. Without this, kubectl
+# never even gets far enough to hit an RBAC check; the AWS CLI itself
+# refuses to describe the cluster.
+resource "aws_iam_role_policy" "eks_describe" {
+  name = "${var.project_name}-eks-describe"
+  role = aws_iam_role.github_actions.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid      = "DescribeThisClusterOnly"
+      Effect   = "Allow"
+      Action   = ["eks:DescribeCluster"]
+      Resource = var.eks_cluster_arn
+    }]
+  })
+}
+
 resource "aws_iam_role_policy" "ecr_push" {
   name = "${var.project_name}-ecr-push"
   role = aws_iam_role.github_actions.id

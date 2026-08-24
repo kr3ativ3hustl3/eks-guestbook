@@ -89,6 +89,7 @@ module "github_cicd" {
   project_name       = var.project_name
   github_repo        = var.github_repo
   ecr_repository_arn = module.ecr.repository_arn
+  eks_cluster_arn    = module.eks.cluster_arn
 }
 
 # Grants GitHub Actions kubectl access to trigger rollouts — same

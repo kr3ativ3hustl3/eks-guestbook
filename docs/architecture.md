@@ -118,6 +118,15 @@ monthly figure.
   A cluster-specific OIDC provider (separate from the account-wide
   GitHub Actions one) sets up IRSA for later, so the Load Balancer
   Controller won't need any static AWS credentials either.
+- Phase 4: the Load Balancer Controller runs with no static AWS
+  credentials at all — its permissions come entirely from IRSA via
+  the cluster's own OIDC provider. GitHub Actions authenticates to AWS
+  the same account-wide-OIDC way as every other project.
+- Phase 5: GitHub Actions' EKS access is scoped to edit permissions in
+  the `default` namespace only — it cannot touch `kube-system` (where
+  the Load Balancer Controller runs), cluster-wide RBAC, or any other
+  namespace, a meaningfully narrower grant than the cluster-admin
+  access given to the human deploying user in Phase 3.
 
 ## Observability posture (running list, updated per phase)
 
