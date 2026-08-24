@@ -1,0 +1,17 @@
+# ClusterIP Service — the ALB Ingress Controller (Phase 4) targets
+# pod IPs directly (target-type: ip, set in ingress.yaml) rather than
+# routing through this Service's own IP, but the Service is still
+# needed for the Ingress to reference a stable object, and for normal
+# in-cluster DNS resolution (guestbook.default.svc.cluster.local).
+apiVersion: v1
+kind: Service
+metadata:
+  name: guestbook
+  namespace: default
+spec:
+  type: ClusterIP
+  selector:
+    app: guestbook
+  ports:
+    - port: 80
+      targetPort: 8080

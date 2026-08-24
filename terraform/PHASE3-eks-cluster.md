@@ -43,8 +43,10 @@ terraform init
 terraform plan
 ```
 
-Expect **11 resources to add**: 2 IAM roles + 5 policy attachments,
-the EKS cluster, the node group, and the OIDC provider.
+Expect **10 resources to add**: 2 IAM roles + 5 policy attachments,
+the EKS cluster, the node group, and the OIDC provider (the OIDC
+provider's thumbprint is a hardcoded, well-known value — see
+docs/troubleshooting.md for why, if you're curious).
 
 ```bash
 terraform apply

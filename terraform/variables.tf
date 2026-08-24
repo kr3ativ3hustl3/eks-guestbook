@@ -51,3 +51,8 @@ variable "kubernetes_version" {
   type        = string
   default     = "1.31"
 }
+
+variable "github_repo" {
+  description = "Your GitHub repo in owner/repo format, e.g. kr3ativ3hustl3/eks-guestbook"
+  type        = string
+}

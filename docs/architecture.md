@@ -70,6 +70,19 @@ on the cluster), managed the same way as any other AWS IAM-adjacent
 resource — directly relevant in Phase 5, when GitHub Actions needs
 `kubectl` access without ever touching an in-cluster ConfigMap by hand.
 
+### Hardcoded EKS OIDC thumbprint, not the `tls` provider's dynamic lookup
+The typical Terraform pattern for populating an EKS OIDC provider's
+`thumbprint_list` uses the `hashicorp/tls` provider to fetch it
+dynamically. That provider's compiled binary turned out to require a
+newer macOS than this project's development machine has — the same
+recurring class of problem hit with several other tools across this
+project series. Rather than fight it, this project hardcodes the
+thumbprint value directly: all AWS EKS OIDC providers share the exact
+same value (`9e99a48a9960b14926bb7f3b02e22da2b0ab7280`), since
+they're backed by the same AWS certificate chain rather than anything
+cluster-specific — a legitimate, independently-documented pattern, not
+a workaround unique to this project's tooling issues.
+
 ## Cost breakdown (expected)
 
 | Service | Free tier | Expected usage | Expected cost |

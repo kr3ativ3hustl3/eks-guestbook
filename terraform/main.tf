@@ -62,3 +62,45 @@ module "eks" {
   public_subnet_ids  = module.networking.public_subnet_ids
   kubernetes_version = var.kubernetes_version
 }
+
+module "ecr" {
+  source = "./modules/ecr"
+
+  providers = { aws = aws }
+
+  project_name = var.project_name
+}
+
+module "lb_controller_irsa" {
+  source = "./modules/lb-controller-irsa"
+
+  providers = { aws = aws }
+
+  project_name      = var.project_name
+  oidc_provider_arn = module.eks.oidc_provider_arn
+  oidc_provider_url = module.eks.oidc_provider_url
+}
+
+module "github_cicd" {
+  source = "./modules/github-cicd"
+
+  providers = { aws = aws }
+
+  project_name       = var.project_name
+  github_repo        = var.github_repo
+  ecr_repository_arn = module.ecr.repository_arn
+}
+
+# Bridges the EKS node/cluster security group to RDS — same deferred
+# pattern used in projects 2-3 (added now, once both sides exist).
+# Not inside either module since it's a simple one-off connection
+# between two independently-built resources.
+resource "aws_security_group_rule" "rds_from_eks" {
+  type                     = "ingress"
+  from_port                = 5432
+  to_port                  = 5432
+  protocol                 = "tcp"
+  security_group_id        = module.database.security_group_id
+  source_security_group_id = module.eks.cluster_security_group_id
+  description              = "Allow EKS nodes/pods to reach RDS"
+}

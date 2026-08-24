@@ -1,0 +1,30 @@
+# This Ingress is what actually triggers the AWS Load Balancer
+# Controller to provision a real ALB — the annotations below are how
+# you configure that ALB's behavior from Kubernetes, instead of
+# writing Terraform for it directly (unlike projects 2-3).
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: guestbook
+  namespace: default
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    # ip target-type: the ALB routes directly to pod IPs (via the VPC
+    # CNI), not to node ports — more direct, avoids an extra network
+    # hop through kube-proxy that instance-mode targeting would add.
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+    alb.ingress.kubernetes.io/healthcheck-port: "8080"
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: guestbook
+                port:
+                  number: 80

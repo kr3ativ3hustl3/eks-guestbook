@@ -42,3 +42,18 @@ output "eks_oidc_provider_url" {
   description = "EKS cluster's OIDC provider URL — used in Phase 4 for IRSA"
   value       = module.eks.oidc_provider_url
 }
+
+output "ecr_repository_url" {
+  description = "ECR repository URL — used by the k8s Deployment manifest and the build/push workflow"
+  value       = module.ecr.repository_url
+}
+
+output "lb_controller_role_arn" {
+  description = "IAM role ARN for the AWS Load Balancer Controller — used to annotate its ServiceAccount when installing via Helm"
+  value       = module.lb_controller_irsa.role_arn
+}
+
+output "github_actions_role_arn" {
+  description = "IAM role ARN for GitHub Actions to assume via OIDC — paste into the GitHub secret AWS_GITHUB_ACTIONS_ROLE_ARN"
+  value       = module.github_cicd.role_arn
+}

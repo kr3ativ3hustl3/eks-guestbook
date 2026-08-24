@@ -1,0 +1,59 @@
+# Deployment: runs 2 replicas of the guestbook app as pods, spread
+# across the cluster's 2 nodes. DB credentials come from a Kubernetes
+# Secret (created manually — see the Phase 4 walkthrough for why this
+# project doesn't commit it to git, same "never commit secrets"
+# principle as every terraform.tfvars file in these projects).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: guestbook
+  namespace: default
+  labels:
+    app: guestbook
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: guestbook
+  template:
+    metadata:
+      labels:
+        app: guestbook
+    spec:
+      containers:
+        - name: guestbook
+          # Replace <ECR_REPOSITORY_URL> with the real value from
+          # `terraform output ecr_repository_url` before applying —
+          # see the Phase 4 walkthrough.
+          image: <ECR_REPOSITORY_URL>:latest
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - secretRef:
+                name: db-credentials
+          # Liveness: is the process itself up? Doesn't touch the
+          # database — a DB outage shouldn't make Kubernetes think
+          # every pod is unhealthy and restart them all at once.
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          # Readiness: is this pod ready to receive real traffic?
+          # Same endpoint is fine here since the app has no separate
+          # "warming up" state — the two probes just serve different
+          # purposes (restart vs remove-from-service).
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "250m"
+              memory: "256Mi"
