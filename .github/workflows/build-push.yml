@@ -1,4 +1,4 @@
-name: Build and Push Image
+name: Build, Push, and Deploy
 
 # All Docker builds happen here, on GitHub's hosted runners — never
 # locally (same reason as every other project in this series: this
@@ -37,3 +37,11 @@ jobs:
           docker build -t "$ECR_REPOSITORY:latest" -t "$ECR_REPOSITORY:${{ github.sha }}" .
           docker push "$ECR_REPOSITORY:latest"
           docker push "$ECR_REPOSITORY:${{ github.sha }}"
+
+      - name: Update kubeconfig
+        run: aws eks update-kubeconfig --name eks-guestbook-cluster --region us-east-1
+
+      - name: Roll out the new image
+        run: |
+          kubectl rollout restart deployment/guestbook
+          kubectl rollout status deployment/guestbook --timeout=180s

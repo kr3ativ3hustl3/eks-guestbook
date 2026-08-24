@@ -91,6 +91,28 @@ module "github_cicd" {
   ecr_repository_arn = module.ecr.repository_arn
 }
 
+# Grants GitHub Actions kubectl access to trigger rollouts — same
+# category of problem as Phase 3's access entry for the deploying IAM
+# user, but scoped much more narrowly here: edit access within the
+# `default` namespace only, not cluster-admin. This role should never
+# be able to touch kube-system, RBAC itself, or any other namespace.
+resource "aws_eks_access_entry" "github_actions" {
+  cluster_name  = module.eks.cluster_name
+  principal_arn = module.github_cicd.role_arn
+  type          = "STANDARD"
+}
+
+resource "aws_eks_access_policy_association" "github_actions" {
+  cluster_name  = module.eks.cluster_name
+  principal_arn = module.github_cicd.role_arn
+  policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSEditPolicy"
+
+  access_scope {
+    type       = "namespace"
+    namespaces = ["default"]
+  }
+}
+
 # Bridges the EKS node/cluster security group to RDS — same deferred
 # pattern used in projects 2-3 (added now, once both sides exist).
 # Not inside either module since it's a simple one-off connection
