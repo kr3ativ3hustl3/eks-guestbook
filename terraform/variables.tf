@@ -45,3 +45,9 @@ variable "db_password" {
   type        = string
   sensitive   = true
 }
+
+variable "kubernetes_version" {
+  description = "EKS Kubernetes version — check current supported versions before applying"
+  type        = string
+  default     = "1.31"
+}

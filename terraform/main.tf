@@ -52,3 +52,13 @@ module "database" {
   db_username         = var.db_username
   db_password         = var.db_password
 }
+
+module "eks" {
+  source = "./modules/eks"
+
+  providers = { aws = aws }
+
+  project_name       = var.project_name
+  public_subnet_ids  = module.networking.public_subnet_ids
+  kubernetes_version = var.kubernetes_version
+}

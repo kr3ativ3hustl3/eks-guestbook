@@ -50,6 +50,26 @@ provisions and configures an actual Application Load Balancer (same
 ALB type used in projects 2-3, keeping the comparison consistent) and
 supports the richer routing/TLS features real applications need.
 
+### Rely on the EKS-managed cluster security group, not a custom one
+When no explicit additional security groups are specified, EKS
+automatically creates and manages a "cluster security group" shared
+between the control plane and worker nodes, with the internal rules
+they need to communicate already configured correctly. Building a
+custom node security group from scratch would just be re-implementing
+what EKS already provides safely by default — Phase 4 adds one
+ingress rule to this existing group (allowing the future ALB in),
+rather than replacing it with hand-rolled rules.
+
+### API-based EKS access management, not the aws-auth ConfigMap
+Older EKS clusters manage who can run `kubectl` against them via a
+special `aws-auth` ConfigMap inside the cluster itself — editable only
+via `kubectl`, which creates an awkward bootstrapping problem (you
+need cluster access to grant cluster access). This project uses EKS's
+newer API-based access entries instead (`authentication_mode = "API"`
+on the cluster), managed the same way as any other AWS IAM-adjacent
+resource — directly relevant in Phase 5, when GitHub Actions needs
+`kubectl` access without ever touching an in-cluster ConfigMap by hand.
+
 ## Cost breakdown (expected)
 
 | Service | Free tier | Expected usage | Expected cost |
@@ -78,6 +98,13 @@ monthly figure.
   database is unreachable from anything until Phase 4 explicitly
   grants EKS pod access. Not publicly accessible; sits in subnets
   with no internet route at all.
+- Phase 3: worker node IAM role scoped to exactly the 3 managed
+  policies a node needs (cluster communication, pod networking, ECR
+  read-only) — nothing broader. EKS API server access uses the modern
+  API-based access entry system, not a shared in-cluster ConfigMap.
+  A cluster-specific OIDC provider (separate from the account-wide
+  GitHub Actions one) sets up IRSA for later, so the Load Balancer
+  Controller won't need any static AWS credentials either.
 
 ## Observability posture (running list, updated per phase)
 
