@@ -74,6 +74,10 @@ monthly figure.
   projects 2-3. Public subnets exist for EKS worker nodes and the
   ALB — no NAT Gateway needed since nothing lives in a private,
   NAT-dependent subnet this time.
+- Phase 2: RDS security group created with zero inbound rules — the
+  database is unreachable from anything until Phase 4 explicitly
+  grants EKS pod access. Not publicly accessible; sits in subnets
+  with no internet route at all.
 
 ## Observability posture (running list, updated per phase)
 

@@ -11,8 +11,8 @@ This is project 4 in a portfolio series:
 - [Project 3](https://github.com/kr3ativ3hustl3/ecs-guestbook) — containers (ECS Fargate, ECR)
 - **Project 4 (this one)** — orchestrated containers (EKS, Kubernetes)
 
-**Status:** 🚧 In progress — Phase 1 of 6 complete (networking: VPC,
-public + database subnets, EKS-tagged, no NAT gateway).
+**Status:** 🚧 In progress — Phase 2 of 6 complete (RDS Postgres in
+isolated subnets, locked down).
 
 ## ⚠️ Cost note
 
@@ -83,7 +83,7 @@ eks-guestbook/
 
 - [x] **Phase 0** — Project scaffold, Terraform state (reusing projects 1-3's backend)
 - [x] **Phase 1** — Networking: VPC, public + database subnets. See [`terraform/PHASE1-networking.md`](terraform/PHASE1-networking.md).
-- [ ] **Phase 2** — Database: RDS Postgres
+- [x] **Phase 2** — Database: RDS Postgres. See [`terraform/PHASE2-database.md`](terraform/PHASE2-database.md).
 - [ ] **Phase 3** — EKS cluster + managed node group
 - [ ] **Phase 4** — AWS Load Balancer Controller + Kubernetes manifests
 - [ ] **Phase 5** — CI/CD: build, push, rolling deploy via kubectl
