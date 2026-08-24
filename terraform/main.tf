@@ -1,0 +1,42 @@
+##############################################################################
+# ROOT MODULE — EKS Guestbook Project (project 4)
+#
+# Reuses the SAME S3 bucket + DynamoDB lock table as projects 1-3 —
+# no new state backend setup needed. The `key` below keeps this
+# project's state completely separate from the others.
+##############################################################################
+
+terraform {
+  required_version = ">= 1.7.0"
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+
+  backend "s3" {
+    bucket         = "sunificent-cloud-resume-tf-state-2026"
+    key            = "eks-guestbook/terraform.tfstate"
+    region         = "us-east-1"
+    dynamodb_table = "cloud-resume-tf-lock"
+    encrypt        = true
+  }
+}
+
+provider "aws" {
+  region = var.aws_region
+}
+
+module "networking" {
+  source = "./modules/networking"
+
+  providers = { aws = aws }
+
+  project_name        = var.project_name
+  vpc_cidr            = var.vpc_cidr
+  availability_zones  = var.availability_zones
+  public_subnet_cidrs = var.public_subnet_cidrs
+  db_subnet_cidrs     = var.db_subnet_cidrs
+}
