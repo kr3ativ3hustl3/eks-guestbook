@@ -92,6 +92,10 @@ resource "aws_iam_role_policy_attachment" "node_ecr" {
 ##############################################################################
 
 resource "aws_eks_cluster" "main" {
+  #checkov:skip=CKV_AWS_39:Disabling the public endpoint entirely would break kubectl access from a local machine, which is exactly how this project's admin workflow operates throughout every phase - it would require standing up a VPN or bastion host inside the VPC just to run commands.
+  #checkov:skip=CKV_AWS_38:Restricting the public endpoint to specific CIDRs is genuinely good practice in production, but would mean hardcoding a developer's current IP and updating it every time they're on a different network - impractical for a portfolio project picked up intermittently across different locations.
+  #checkov:skip=CKV_AWS_58:Unlike SSM/SNS/ECR elsewhere in this series, EKS secrets envelope encryption has no free AWS-default-key option - it requires a real, billed Customer-Managed KMS Key (~$1/month), out of scope for a zero-new-cost security pass.
+  #checkov:skip=CKV_AWS_37:Control plane logging is free to enable itself, but the logs stream to CloudWatch Logs with real per-GB ingestion/storage cost - especially audit logs, which record every API server request. Same reasoning as declining other new logging destinations throughout this series.
   name     = "${var.project_name}-cluster"
   role_arn = aws_iam_role.cluster.arn
   version  = var.kubernetes_version
