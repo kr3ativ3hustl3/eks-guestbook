@@ -17,6 +17,7 @@ terraform {
 }
 
 resource "aws_ecr_repository" "app" {
+  #checkov:skip=CKV_AWS_51:MUTABLE is the deliberate, already-documented design choice explained in the comment directly below - a floating "latest" tag with explicit redeploy, not an oversight.
   name = "${var.project_name}-app"
 
   # MUTABLE, not IMMUTABLE — a deliberate simplicity tradeoff. This
@@ -34,6 +35,11 @@ resource "aws_ecr_repository" "app" {
 
   image_scanning_configuration {
     scan_on_push = true
+  }
+
+  # Encrypted using AWS's default ECR-managed KMS key - free.
+  encryption_configuration {
+    encryption_type = "KMS"
   }
 
   tags = {
